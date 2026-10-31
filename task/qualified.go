@@ -65,6 +65,10 @@ func verifyDownload(ip *net.IPAddr)(float64,int64,error){
  transport:=&http.Transport{DialContext:getDialContext(ip),DisableKeepAlives:true,DisableCompression:true}
  defer transport.CloseIdleConnections()
  client:=&http.Client{Transport:transport,Timeout:VerifyTimeout,CheckRedirect:func(*http.Request,[]*http.Request)error{return http.ErrUseLastResponse}}
+ return verifyTransfer(client,url)
+}
+
+func verifyTransfer(client *http.Client,url string)(float64,int64,error){
  req,err:=http.NewRequest("GET",url,nil);if err!=nil{return 0,0,err}
  if req.URL.Scheme!="https" {return 0,0,fmt.Errorf("verification requires HTTPS")}
  req.Header.Set("Range",fmt.Sprintf("bytes=0-%d",VerifyBytes-1))
