@@ -23,7 +23,7 @@ jobs:
           mkdir -p dist
           docker run --rm --platform linux/386 -v "$PWD:/src" -w /src i386/alpine:3.22 sh -ec '
             apk add --no-cache go gcc musl-dev git
-            CGO_ENABLED=1 GOARCH=386 GOOS=linux GO386=softfloat GOMAXPROCS=1 go build -mod=vendor -trimpath -ldflags="-s -w -linkmode external -extldflags -static" -o dist/cfst .
+            CGO_ENABLED=1 GOARCH=386 GOOS=linux GO386=softfloat GOMAXPROCS=1 go build -buildvcs=false -mod=vendor -trimpath -ldflags="-s -w -linkmode external -extldflags -static" -o dist/cfst .
             ./dist/cfst -h
           '
           tar -C dist -czf cfst-ish-linux-386.tar.gz cfst
