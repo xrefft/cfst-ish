@@ -11,7 +11,7 @@ cd cfst-ish
 sh install.sh
 ```
 
-`install.sh` 下载 [v0.1.0-ish.1 预览版](https://github.com/xrefft/cfst-ish/releases/tag/v0.1.0-ish.1)并验证 SHA256，无需登录或本机编译。静态 musl Linux 386 包已通过 CI 构建及启动检查，仍需 iSH 网络实测。若需从当前源码构建，执行 `apk add go gcc musl-dev`，再执行 `sh build.sh`。
+`install.sh` 下载 [v0.2.0-ish.1 预览版](https://github.com/xrefft/cfst-ish/releases/tag/v0.2.0-ish.1)并验证 SHA256，无需登录或本机编译。静态 musl Linux 386 包已通过 CI 构建及启动检查，仍需 iSH 网络实测。若需从当前源码构建，执行 `apk add go gcc musl-dev`，再执行 `sh build.sh`。
 
 ## 候选上限与最终交付数量（新版）
 

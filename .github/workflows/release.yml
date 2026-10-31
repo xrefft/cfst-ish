@@ -14,8 +14,8 @@ jobs:
           GH_REPO: xrefft/cfst-ish
         run: |
           set -eu
-          test "$(gh run view 41192201729 --json conclusion --jq .conclusion)" = success
-          gh run download 41192201729 -n cfst-ish-linux-386 -D package
+          test "$(gh run view 41199372213 --json conclusion --jq .conclusion)" = success
+          gh run download 41199372213 -n cfst-ish-linux-386 -D package
           cd package
           sha256sum -c SHA256SUMS
-          gh release create v0.1.0-ish.1 --target 54550f1a54366b4450d3420406b89adfc077a20e --prerelease --title 'v0.1.0-ish.1 — iSH compatibility preview' --notes 'CFST base with sequential iSH mode, unique IPv4 sampling, early stop, result race and delay-filter fixes. Static musl Linux 386 binary. Race tests, vet, build and startup checks passed in CI run 41192201729. Real iSH network validation remains required.' cfst-ish-linux-386.tar.gz SHA256SUMS
+          gh release create v0.2.0-ish.1 --target 5673b613ff885b9e00d10c0a3311d459c57adaf5 --prerelease --title 'v0.2.0-ish.1 — iSH compatibility preview' --notes 'Integrated -sample candidate limit and -target final TCP+download qualified count. Failed downloads are replaced by subsequent candidates; defaults: 1 MiB per round, 30-second timeout, 300 MiB body budget. Optional repeated download checks. HTTPS short-body, HTTP error, timeout, and replenishment tests. Static musl Linux 386 binary. Race tests, vet, build and startup checks passed in CI run 41199372213. Real iSH network validation remains required.' cfst-ish-linux-386.tar.gz SHA256SUMS

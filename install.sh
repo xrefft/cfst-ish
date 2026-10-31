@@ -7,7 +7,7 @@ work=$(mktemp -d ./install.XXXXXX)
 trap 'rm -rf "$work"' EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM HUP
-url=https://github.com/xrefft/cfst-ish/releases/download/v0.1.0-ish.1
+url=https://github.com/xrefft/cfst-ish/releases/download/v0.2.0-ish.1
 curl -fL --retry 2 --connect-timeout 15 --max-time 300 "$url/cfst-ish-linux-386.tar.gz" -o "$work/cfst-ish-linux-386.tar.gz"
 curl -fL --retry 2 --connect-timeout 15 --max-time 60 "$url/SHA256SUMS" -o "$work/SHA256SUMS"
 (cd "$work"; sha256sum -c SHA256SUMS; tar -xzf cfst-ish-linux-386.tar.gz)
