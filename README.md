@@ -13,6 +13,14 @@ sh install.sh
 
 `install.sh` 下载 [v0.1.0-ish.1 预览版](https://github.com/xrefft/cfst-ish/releases/tag/v0.1.0-ish.1)并验证 SHA256，无需登录或本机编译。静态 musl Linux 386 包已通过 CI 构建及启动检查，仍需 iSH 网络实测。若需从当前源码构建，执行 `apk add go gcc musl-dev`，再执行 `sh build.sh`。
 
+## 候选上限与最终交付数量（新版）
+
+```sh
+GOMAXPROCS=1 ./cfst -ish -sample 100 -target 5 -t 4 -tl 1500 -connect-timeout 3s -ip 104.16.0.0/13
+```
+
+最多100个不重复候选，逐个检查4/4连接及下载；下载失败继续补选，最终合格5个即停。默认每IP下载至少1MiB、每轮30秒超时、总响应体预算300MiB；候选或预算耗尽时返回实际数量。`-target`不能和`-stop`、`-dd`、`-httping`组合。`-dn`不控制此模式。`-sl`可设置每轮最低MiB/s；`-verify-rounds 3 -verify-bytes 5242880`启用三轮各5MiB验证，最慢/最快均速比默认至少0.5。只读取指定字节量，无需下载整个大文件；不代表完整代理协议可用。
+
 ## 先测基础连接
 
 ```sh
