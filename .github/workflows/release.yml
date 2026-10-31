@@ -18,4 +18,5 @@ jobs:
           gh run download 41199528578 -n cfst-ish-linux-386 -D package
           cd package
           sha256sum -c SHA256SUMS
-          gh release create v0.2.0-ish.1 --target 031aa344079aeb3c76cc3bc2361f154361c96e7a --prerelease --title 'v0.2.0-ish.1 — iSH compatibility preview' --notes 'Integrated -sample candidate limit and -target final qualified count respecting enabled checks (-dd skips download). Failed downloads are replaced by subsequent candidates; defaults: 1 MiB per round, timeout set by -dt (default 10 seconds), 300 MiB body budget. Optional repeated download checks. HTTPS short-body, HTTP error, timeout, replenishment and download-disabled target tests. Static musl Linux 386 binary. Race tests, vet, build and startup checks passed in CI run 41199528578. Real iSH network validation remains required.' cfst-ish-linux-386.tar.gz SHA256SUMS
+          gh release upload v0.2.0-ish.1 cfst-ish-linux-386.tar.gz SHA256SUMS
+
