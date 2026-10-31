@@ -26,10 +26,9 @@ https://github.com/XIU2/CloudflareSpeedTest
 
 iSH additions:
 -ish            sequential probes, plain progress, GOMAXPROCS=1
--target 5       deliver N TCP+download qualified IPs (requires -sample; replaces -stop)
+-target 5       deliver N IPs passing enabled checks (requires -sample; replaces -stop)
 -verify-bytes 1048576  required download bytes per round
 -verify-rounds 1       download rounds per IP
--verify-timeout 30s    deadline per round
 -verify-budget 314572800 total body byte budget
 -verify-ratio 0.5      minimum slowest/fastest round ratio
 -sample 400     sample N unique IPv4 addresses (0 keeps upstream behavior)
@@ -125,12 +124,11 @@ iSH additions:
 	flag.IntVar(&task.FinalTarget, "target", 0, "final TCP+download qualified count; requires -sample")
  flag.Int64Var(&task.VerifyBytes, "verify-bytes", 1048576, "minimum downloaded body bytes per round")
  flag.IntVar(&task.VerifyRounds, "verify-rounds", 1, "successful download rounds per IP")
- flag.DurationVar(&task.VerifyTimeout, "verify-timeout", 30*time.Second, "deadline per download round")
  flag.Int64Var(&task.VerifyBudget, "verify-budget", 300*1048576, "total response body byte budget")
  flag.Float64Var(&task.VerifyRatio, "verify-ratio", 0.5, "minimum slowest/fastest round speed ratio")
  flag.Parse()
- if task.FinalTarget < 0 || (task.FinalTarget > 0 && (task.SampleCount<=0 || task.Disable || task.StopAfter>0 || task.Httping || task.VerifyBytes<=0 || task.VerifyRounds<=0 || task.VerifyTimeout<=0 || task.VerifyBudget<task.VerifyBytes || task.VerifyRatio<=0 || task.VerifyRatio>1)) {
- fmt.Fprintln(os.Stderr,"-target requires -sample, TCP and download enabled; do not combine -stop/-dd/-httping; check verify limits")
+ if task.FinalTarget < 0 || (task.FinalTarget > 0 && (task.SampleCount<=0 || task.StopAfter>0 || task.VerifyBytes<=0 || task.VerifyRounds<=0 || task.VerifyBudget<task.VerifyBytes || task.VerifyRatio<=0 || task.VerifyRatio>1)) {
+ fmt.Fprintln(os.Stderr,"-target requires -sample; do not combine -stop; check verify limits")
  os.Exit(2)
  }
 	if task.SampleCount < 0 || task.SampleCount > 100000 || task.StopAfter < 0 || task.ConnectTimeout <= 0 {

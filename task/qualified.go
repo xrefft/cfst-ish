@@ -13,7 +13,6 @@ import (
 var FinalTarget int
 var VerifyBytes int64 = 1048576
 var VerifyRounds = 1
-var VerifyTimeout = 30*time.Second
 var VerifyRatio = 0.5
 var VerifyBudget int64 = 300*1048576
 
@@ -35,14 +34,16 @@ func RunQualified() utils.DownloadSpeedSet {
  checkPingDefault()
  ips:=loadIPRanges()
  p:=&Ping{}
+ checkDownloadDefault()
  remaining:=VerifyBudget
  result:=selectQualified(ips,FinalTarget,func(ip *net.IPAddr)*utils.PingData{
   recv,delay,colo:=p.checkConnection(ip)
-  if recv!=PingTimes{return nil}
+  if recv==0 || float32(PingTimes-recv)/float32(PingTimes)>utils.InputMaxLossRate{return nil}
   data:=&utils.PingData{IP:ip,Sended:PingTimes,Received:recv,Delay:delay/time.Duration(recv),Colo:colo}
   if data.Delay<utils.InputMinDelay || data.Delay>utils.InputMaxDelay{return nil}
   return data
  },func(ip *net.IPAddr)(float64,bool,bool){
+  if Disable {return 0,true,false}
   min,max:=0.0,0.0
   for r:=0;r<VerifyRounds;r++ {
    if remaining<VerifyBytes {fmt.Println("download byte budget exhausted");return 0,false,true}
@@ -64,7 +65,7 @@ func verifyDownload(ip *net.IPAddr)(float64,int64,error){
  if url==defaultURL {url=fmt.Sprintf("https://speed.cloudflare.com/__down?bytes=%d",VerifyBytes)}
  transport:=&http.Transport{DialContext:getDialContext(ip),DisableKeepAlives:true,DisableCompression:true}
  defer transport.CloseIdleConnections()
- client:=&http.Client{Transport:transport,Timeout:VerifyTimeout,CheckRedirect:func(*http.Request,[]*http.Request)error{return http.ErrUseLastResponse}}
+ client:=&http.Client{Transport:transport,Timeout:Timeout,CheckRedirect:func(*http.Request,[]*http.Request)error{return http.ErrUseLastResponse}}
  return verifyTransfer(client,url)
 }
 

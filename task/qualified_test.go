@@ -1,5 +1,5 @@
 package task
-import("net";"testing";"net/http";"net/http/httptest";"time";"github.com/XIU2/CloudflareSpeedTest/utils")
+import("net";"testing";"net/http";"net/http/httptest";"time";"strconv";"github.com/XIU2/CloudflareSpeedTest/utils")
 func TestFinalTargetReplenishesDownloadFailures(t *testing.T){
  ips:=[]*net.IPAddr{{IP:net.ParseIP("192.0.2.1")},{IP:net.ParseIP("192.0.2.2")},{IP:net.ParseIP("192.0.2.3")},{IP:net.ParseIP("192.0.2.4")}}
  calls:=0
@@ -24,4 +24,15 @@ func TestVerifyTransferRejectsShortAndHTTPError(t *testing.T){
  server:=httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter,r *http.Request){time.Sleep(50*time.Millisecond);w.Write(make([]byte,16))}))
  defer server.Close();client:=server.Client();client.Timeout=10*time.Millisecond
  if _,_,err:=verifyTransfer(client,server.URL);err==nil{t.Fatal("timeout accepted")}
+}
+
+func TestTargetWithDownloadDisabled(t *testing.T){
+ listener,err:=net.Listen("tcp4","127.0.0.1:0");if err!=nil{t.Fatal(err)};defer listener.Close()
+ go func(){for{c,e:=listener.Accept();if e!=nil{return};c.Close()}}()
+ oldText,oldSample,oldTarget,oldDisable,oldPort,oldTimes:=IPText,SampleCount,FinalTarget,Disable,TCPPort,PingTimes
+ oldURL,oldMax,oldLoss:=URL,utils.InputMaxDelay,utils.InputMaxLossRate
+ defer func(){IPText,SampleCount,FinalTarget,Disable,TCPPort,PingTimes=oldText,oldSample,oldTarget,oldDisable,oldPort,oldTimes;URL,utils.InputMaxDelay,utils.InputMaxLossRate=oldURL,oldMax,oldLoss}()
+ _,port,_:=net.SplitHostPort(listener.Addr().String());TCPPort,_=strconv.Atoi(port)
+ IPText="127.0.0.1";SampleCount=1;FinalTarget=1;Disable=true;PingTimes=4;URL="https://invalid.invalid/";utils.InputMaxDelay=time.Second;utils.InputMaxLossRate=0
+ got:=RunQualified();if len(got)!=1||got[0].Received!=4||got[0].DownloadSpeed!=0{t.Fatal(got)}
 }
