@@ -1,0 +1,35 @@
+name: Test and build iSH preview
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.x'
+      - run: go test -race ./...
+      - run: go vet ./...
+      - run: go build ./...
+      - run: sh -n cfst-ish install.sh sample-stable.sh
+      - name: Compile static musl Linux 386 binary
+        run: |
+          mkdir -p dist
+          docker run --rm --platform linux/386 -v "$PWD:/src" -w /src i386/alpine:3.22 sh -ec '
+            apk add --no-cache go gcc musl-dev git
+            CGO_ENABLED=1 GOARCH=386 GOOS=linux GO386=softfloat GOMAXPROCS=1 go build -trimpath -ldflags="-s -w -linkmode external -extldflags -static" -o dist/cfst .
+            ./dist/cfst -h
+          '
+          tar -C dist -czf cfst-ish-linux-386.tar.gz cfst
+          sha256sum cfst-ish-linux-386.tar.gz > SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cfst-ish-linux-386
+          path: |
+            cfst-ish-linux-386.tar.gz
+            SHA256SUMS

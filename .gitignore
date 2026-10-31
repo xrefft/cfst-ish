@@ -1,0 +1,12 @@
+/cfst
+/cfst.new
+/cfst_linux_386/
+/dist/
+/cfst-*.tar.gz
+/SHA256SUMS
+/cfst-work.*/
+/cfst-result.*/
+/cfst-stable.*/
+/diagnostic.*/
+/install.*/
+/result*.csv

@@ -1,50 +1,74 @@
-# cfst-ish
+# CFST for iSH
 
-适用于 iSH 的低并发 Cloudflare IPv4 抽样与下载稳定性检查。
+在 CFST 源码基础上开发的 iSH 兼容版本：保留 TCP/HTTP 延迟测试、下载测速、IPv4/IPv6 输入和 CSV，新增限量随机抽样、够数即停、顺序测试及下载稳定性验证。仓库公开，可免登录拉取。
 
-## 下载
-
-这是私有仓库。可通过 Git 克隆，或在已有 CFST 的目录里执行：
+## iSH 安装
 
 ```sh
-apk add curl ca-certificates
-curl -fL -u xrefft -H 'Accept: application/vnd.github.raw+json' https://api.github.com/repos/xrefft/cfst-ish/contents/sample-stable.sh -o sample-stable.sh
+apk add git curl ca-certificates go gcc musl-dev
+git clone https://github.com/xrefft/cfst-ish.git
+cd cfst-ish
+sh install.sh
 ```
 
-curl 提示密码时，输入具有本仓库 Contents 只读权限的 GitHub personal access token，不是账户密码。不要把 token 写入命令、提交到仓库或发送到聊天。
+`install.sh` 在本机从当前源码构建 Linux 386 静态 musl 二进制，限制编译并发。iSH 编译较慢且需要下载 Go 依赖，请保持前台运行。也可在仓库 Actions 的成功构建中下载 `cfst-ish-linux-386` 产物，解压其中的 tar.gz，将 `cfst` 放到此目录；下载 Actions 产物需要 GitHub 登录。本仓库没有自动发布 Release。仍需 iSH 实机验证。
 
-## 运行
+## 先测基础连接
 
-脚本放在 cfst 可执行文件同目录，或包含 cfst_linux_386/cfst 的目录。不包含 CFST 二进制，需自行安装 XIU2/CloudflareSpeedTest。
+```sh
+sh cfst-ish -sample 20 -stop 11 -t 4 -tlr 0 -tl 1500 -connect-timeout 3s -dd
+```
+
+从自带 ip.txt 网段中随机抽最多20个不重复IPv4，四次连接全部成功且平均延迟≤1500ms才计为合格，找到11个即停。候选不足也会结束。`-n`仍表示并发；`-ish`/`-stop`模式顺序执行。
+
+```sh
+sh cfst-ish -sample 400 -stop 11 -t 4 -tlr 0 -tl 1500 -dd
+```
+
+新增 `-sample` 仅支持 IPv4；不用该选项时仍保留上游 IPv6 功能。`-stop` 是延迟阶段的提前停止，不表示最终下载合格数量。它们与原版同名参数的区别见 `sh cfst-ish -h`。
+
+## 连接 + 下载稳定性验证
 
 ```sh
 sh sample-stable.sh 400 11
 ```
 
-随机生成最多 400 个不重复 IPv4，逐个测试，找到 11 个合格结果就停止。无需 IP 输入文件。内置网段来自 Cloudflare 官方 IPv4 列表（2026-10-31 快照）。
-
-## 默认合格条件
-
-- TCP 测试 4 次全部成功，平均延迟不超过 1500ms。
-- 连续完成 3 轮 HTTPS 下载，每轮至少 5 MiB。
-- 每轮均速至少 100 KiB/s，最慢轮/最快轮至少 0.5。
-- 每轮最多 90 秒，轮间等待 2 秒；任何一轮失败即淘汰。
-- 累计响应体预算 300 MiB；协议开销不计入，某些旧 curl 对未知长度响应的限制可能不是硬上限。
-
-下载请求固定连接候选 IP，并保留下载域名的 TLS 校验；不跟随重定向，不重试，不使用 curl 环境代理。系统级 VPN 仍可能影响路径。默认下载服务为 speed.cloudflare.com。
-
-这些检查仅验证本次到下载服务的表现，不能保证未来稳定，也不验证 VLESS/Trojan 等完整代理协议。轮间均速比不是逐秒波动测量。
-
-## 参数
+- 每个 IP 四次 TCP 全成功，平均延迟≤1500ms。
+- 连续三轮完整 HTTPS 下载，每轮≥5MiB，均速≥100KiB/s。
+- 最慢轮/最快轮≥0.5；每轮最多90秒，间隔2秒。
+- 逐IP启动新进程并加外部超时；找到11个完全合格IP即停。
+- 响应体总预算300MiB，不含协议开销。旧curl对未知长度响应可能不是硬上限。
 
 ```sh
 MIN_MIB=10 ROUNDS=4 MAX_TOTAL_MIB=600 sh sample-stable.sh 400 11
 ```
 
-可调环境变量：MIN_MIB、ROUNDS（至少2）、MIN_KIB、MIN_RATIO、ROUND_TIMEOUT、MAX_TOTAL_MIB、GAP。DOWNLOAD_URL 可指定支持 HTTPS 默认443端口的下载文件；文件须足够大，最好支持 Range。更换下载服务后结果代表该服务路径。
+结果和逐轮日志保存在 `cfst-stable.*`。此验证反映本次到下载域名的表现；轮间均速比不等于逐秒稳定性，不保证未来稳定，也不验证 VLESS/Trojan 等完整代理协议。
 
-结果保存在每次创建的 cfst-stable.* 目录：result.csv、candidates.txt、downloads.csv 和最近一次日志。终端中断会保留结果，临时目录会清理。
+## 更新
 
-## 验证
+```sh
+git pull --ff-only
+sh install.sh
+```
 
-通过 Shell 语法检查及模拟成功、下载不足、请求失败、速度波动、实际远端 IP 不匹配、流量预算不足等测试。未在用户的 iSH 设备上实测。
+## 排查卡住
+
+```sh
+sh diagnose.sh
+sh diagnose.sh 104.16.0.1
+```
+
+第一个命令不测网络；第二个命令记录默认/单核模式、FD数和退出状态。日志只保存在本机。不会修改DNS或提高ulimit。
+
+已发现的代码问题、修复和仍未验证的 iSH 假设见 [兼容性调查](docs/ish-compatibility.md)。不要把“能显示帮助”视为网络功能完全兼容，也不要把云端Linux测试说成iSH实测。
+
+## 开发
+
+```sh
+go test -race ./...
+go vet ./...
+go build .
+```
+
+GitHub Actions 执行测试并构建静态musl的linux/386预览包。保留原版 GPL-3.0 许可证及[上游来源](UPSTREAM.md)。

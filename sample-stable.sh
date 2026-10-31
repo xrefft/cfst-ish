@@ -33,7 +33,9 @@ for value in "$N" "$TARGET"; do
 done
 [ "$N" -le 100000 ] || { echo '抽样上限为100000'; exit 1; }
 cd "$(dirname "$0")"
-if [ -x ./cfst ]; then BIN=./cfst
+export GOMAXPROCS=1
+if [ -x ./cfst-ish ]; then BIN=./cfst-ish
+elif [ -x ./cfst ]; then BIN=./cfst
 elif [ -x ./cfst_linux_386/cfst ]; then BIN=./cfst_linux_386/cfst
 else echo '请把本脚本放在 cfst 同目录或其上一级'; exit 1
 fi
@@ -83,7 +85,7 @@ while IFS= read -r ip; do
   printf '%s\n' "$ip" > "$WORK/one.txt"
   rm -f "$WORK/one.csv"
   echo "[$tested/$N] $ip：TCP测试……"
-  if timeout 30 "$BIN" -f "$WORK/one.txt" -tp 443 -n 1 -t 4 -tl 1500 -tlr 0 -dd -p 0 -o "$WORK/one.csv" > "$RESULT/last-tcp.log" 2>&1; then :
+  if timeout -k 5 30 "$BIN" -f "$WORK/one.txt" -tp 443 -n 1 -t 4 -tl 1500 -tlr 0 -dd -p 0 -o "$WORK/one.csv" > "$RESULT/last-tcp.log" 2>&1; then :
   else echo '  TCP测试失败或超时'; continue
   fi
   [ -s "$WORK/one.csv" ] || { echo '  TCP未达标'; continue; }

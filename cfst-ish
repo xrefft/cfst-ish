@@ -1,0 +1,9 @@
+#!/bin/sh
+set -eu
+cd "$(dirname "$0")"
+export GOMAXPROCS=1
+if [ -x ./cfst ]; then BIN=./cfst
+elif [ -x ./cfst_linux_386/cfst ]; then BIN=./cfst_linux_386/cfst
+else echo '请先运行 sh install.sh'; exit 1
+fi
+exec "$BIN" -ish "$@"
