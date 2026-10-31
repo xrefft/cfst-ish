@@ -10,3 +10,5 @@
 /diagnostic.*/
 /install.*/
 /result*.csv
+
+vendor/

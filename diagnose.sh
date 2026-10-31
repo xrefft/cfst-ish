@@ -10,7 +10,7 @@ out=$(mktemp -d ./diagnostic.XXXXXX)
   printf 'fd_hard='; ulimit -Hn
   if [ -r /etc/alpine-release ]; then cat /etc/alpine-release; fi
   if [ -r /proc/ish/version ]; then cat /proc/ish/version; fi
-  command -v curl >/dev/null 2>&1 && curl --version
+  if command -v curl >/dev/null 2>&1; then curl --version; fi
 } > "$out/system.txt" 2>&1
 if [ -z "${1:-}" ]; then
   echo "已保存环境信息：$out/system.txt"
