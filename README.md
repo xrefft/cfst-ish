@@ -5,13 +5,13 @@
 ## iSH 安装
 
 ```sh
-apk add git curl ca-certificates go gcc musl-dev
+apk add git curl ca-certificates
 git clone https://github.com/xrefft/cfst-ish.git
 cd cfst-ish
 sh install.sh
 ```
 
-`install.sh` 在本机从当前源码构建 Linux 386 静态 musl 二进制，限制编译并发。iSH 编译较慢且需要下载 Go 依赖，请保持前台运行。也可在仓库 Actions 的成功构建中下载 `cfst-ish-linux-386` 产物，解压其中的 tar.gz，将 `cfst` 放到此目录；下载 Actions 产物需要 GitHub 登录。本仓库没有自动发布 Release。仍需 iSH 实机验证。
+`install.sh` 下载 [v0.1.0-ish.1 预览版](https://github.com/xrefft/cfst-ish/releases/tag/v0.1.0-ish.1)并验证 SHA256，无需登录或本机编译。静态 musl Linux 386 包已通过 CI 构建及启动检查，仍需 iSH 网络实测。若需从当前源码构建，执行 `apk add go gcc musl-dev`，再执行 `sh build.sh`。
 
 ## 先测基础连接
 

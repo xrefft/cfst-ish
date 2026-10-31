@@ -1,0 +1,21 @@
+name: Publish tested iSH preview
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish previously tested binary
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: xrefft/cfst-ish
+        run: |
+          set -eu
+          test "$(gh run view 41192201729 --json conclusion --jq .conclusion)" = success
+          gh run download 41192201729 -n cfst-ish-linux-386 -D package
+          cd package
+          sha256sum -c SHA256SUMS
+          gh release create v0.1.0-ish.1 --target 54550f1a54366b4450d3420406b89adfc077a20e --prerelease --title 'v0.1.0-ish.1 — iSH compatibility preview' --notes 'CFST base with sequential iSH mode, unique IPv4 sampling, early stop, result race and delay-filter fixes. Static musl Linux 386 binary. Race tests, vet, build and startup checks passed in CI run 41192201729. Real iSH network validation remains required.' cfst-ish-linux-386.tar.gz SHA256SUMS
